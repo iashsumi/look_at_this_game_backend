@@ -1,39 +1,160 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  get-youtube-rss
-
-  Sample SAM Template for get-youtube-rss
+  Sample SAM Template for game rss
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 900
+    MemorySize: 256
 
 Resources:
-  HelloWorldFunction:
+  # DynamoDBテーブル設定
+  Commentators:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Commentators
+      AttributeDefinitions:
+        - 
+          AttributeName: site_id
+          AttributeType: N
+        - 
+          AttributeName: user_id
+          AttributeType: S
+      KeySchema: 
+        - 
+          AttributeName: site_id
+          KeyType: HASH
+        - 
+          AttributeName: user_id
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  
+  Videos:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: Videos
+      AttributeDefinitions: 
+        - 
+          AttributeName: dummy_key
+          AttributeType: S
+        - 
+          AttributeName: sort_key
+          AttributeType: S
+      KeySchema: 
+        - 
+          AttributeName: dummy_key
+          KeyType: HASH
+        - 
+          AttributeName: sort_key
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  BatchYoutubeRssFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: hello_world/
+      CodeUri: batch/youtube/
       Handler: app.lambda_handler
       Runtime: ruby2.7
       Events:
-        HelloWorld:
+        BatchRssYouTube:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello
+            Path: /batch/youtube
             Method: get
+      Environment:
+        Variables:
+          TZ: Asia/Tokyo
+          TABLE_1: Commentators
+          TABLE_2: Videos
+      Policies:
+        # DynamoDBへCreate/Read/Update/Deleteする権限を付与
+        - DynamoDBCrudPolicy:
+            TableName: Commentators
+        - DynamoDBCrudPolicy: 
+            TableName: Videos
 
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  BatchNiconicoRssFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: batch/niconico/
+      Handler: app.lambda_handler
+      Runtime: ruby2.7
+      Events:
+        BatchRssNiconico:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /batch/niconico
+            Method: get
+      Environment:
+        Variables:
+          TZ: Asia/Tokyo
+          TABLE_1: Commentators
+          TABLE_2: Videos
+      Policies:
+        # DynamoDBへCreate/Read/Update/Deleteする権限を付与
+        - DynamoDBCrudPolicy:
+            TableName: Commentators
+        - DynamoDBCrudPolicy: 
+            TableName: Videos
+
+  CommentatorsApi:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: api/commentators/
+      Handler: app.lambda_handler
+      Runtime: ruby2.7
+      Events:
+        Commentators:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /commentators
+            Method: get
+      Environment:
+        Variables:
+          TZ: Asia/Tokyo
+          TABLE_1: Commentators
+      Policies:
+        # DynamoDBへCreate/Read/Update/Deleteする権限を付与
+        - DynamoDBReadPolicy:
+            TableName: Commentators
+
+  VideosApi:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: api/videos/
+      Handler: app.lambda_handler
+      Runtime: ruby2.7
+      Events:
+        Videos:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /videos
+            Method: get
+      Environment:
+        Variables:
+          TZ: Asia/Tokyo
+          TABLE_2: Videos
+      Policies:
+        # DynamoDBへCreate/Read/Update/Deleteする権限を付与
+        - DynamoDBReadPolicy:
+            TableName: Videos
+       
+# Outputs:
+#   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+#   # Find out more about other implicit resources you can reference within SAM
+#   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+#   BatchYouTubeRssApi:
+#     Description: "API Gateway endpoint URL for Prod stage for Batch YouTube Rss function"
+#     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+#   BatchYouTubeRssFunction:
+#     Description: "Batch YouTube Rss Lambda Function ARN"
+#     Value: !GetAtt BatchYouTubeRssFunction.Arn
+#   BatchYouTubeRssFunctionIamRole:
+#     Description: "Implicit IAM Role created for Batch YouTube Rss function"
+#     Value: !GetAtt BatchYouTubeRssFunctionRole.Arn

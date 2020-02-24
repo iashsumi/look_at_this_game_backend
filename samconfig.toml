@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "product-v1-game-rss"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-7k8jfox2r7rd"
+s3_prefix = "product-v1-game-rss"
+region = "ap-northeast-1"
+capabilities = "CAPABILITY_IAM"
+

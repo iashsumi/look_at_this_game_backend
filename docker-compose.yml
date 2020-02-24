@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  dynamo-admin:
+    image: instructure/dynamo-local-admin
+    ports:
+      - "8008:8000"
+  dynamodb-local:
+    container_name: dynamodb
+    image: amazon/dynamodb-local
+    build: ./
+    ports:
+      - 8000:8000
+    command: -jar DynamoDBLocal.jar -dbPath /data -sharedDb
+    volumes:
+      - ./data:/data
+    networks:
+      - lambda-local
+networks:
+  lambda-local:
+    external: true

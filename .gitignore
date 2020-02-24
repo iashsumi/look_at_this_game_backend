@@ -241,4 +241,15 @@ $RECYCLE.BIN/
 
 */build/*
 
+/batch/youtube/.bundle
+/batch/youtube/vendor
+
+/batch/niconico/.bundle
+/batch/niconico/vendor
+
+/api/commentators/.bundle
+/api/commentators/vendor
+
+/api/videos/.bundle
+/api/videos/vendor
 # End of https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
