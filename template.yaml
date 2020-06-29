@@ -7,7 +7,7 @@ Description: >
 Globals:
   Function:
     Timeout: 900
-    MemorySize: 512
+    MemorySize: 256
 
 Resources:
   # DynamoDBテーブル設定

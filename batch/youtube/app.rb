@@ -3,14 +3,18 @@ require "aws-sdk"
 require 'date'
 require 'net/http'
 require 'rss'
+require 'securerandom'
 
 YOUTUBE_SITE_ID = 0
 TABLE_1 = ENV['TABLE_1']
 TABLE_2 = ENV['TABLE_2']
 
 def lambda_handler(event:, context:)
+  uuid = SecureRandom.uuid
+  puts "START-#{uuid}"
+  return if health_check(event)
+
   client = Aws::DynamoDB::Client.new(region: 'ap-northeast-1')
-  
   target = commentators(client)
   return if target.blank?
 
@@ -33,9 +37,21 @@ def lambda_handler(event:, context:)
       end
     end
   end
+  puts "END-#{uuid}"
 end
 
 private
+
+  def health_check(event)
+    value = event['queryStringParameters']['health_check'] if event['queryStringParameters'].present?
+    if value == 'true'
+      puts 'health check!!' 
+      return true
+    else
+      puts 'execute!!'
+      return false 
+    end
+  end
 
   def commentators(client)
     client.scan({
